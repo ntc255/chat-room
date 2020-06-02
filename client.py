@@ -2,7 +2,7 @@ import socket
 import select
 import errno
 import sys
-
+from generic_functions import send_msg, receive_msg
 
 HEADER_LENGTH = 10
 IP = "127.0.0.1"
@@ -14,37 +14,26 @@ client_socket.connect((IP, PORT))
 # received functionality will not be blocking 
 client_socket.setblocking(False)
 
-def send_msg(s):
-    s_body = s.encode('utf-8')
-    s_header = f'{len(s_body):<{HEADER_LENGTH}}'.encode("utf-8")
-    client_socket.send(s_header + s_body)
 
-def receive_msg():
-    s_header = client_socket.recv(HEADER_LENGTH)
-    if not len(s_header):
-        return -1
-    s_length = int(s_header.decode('utf-8').strip())
-    s = client_socket.recv(s_length).decode('utf-8')
-    return s
 
 username = my_username.encode('utf-8')
 # username_header = f'{len(username):<{HEADER_LENGTH}}'.encode("utf-8")
 # client_socket.send(username_header + username)
-send_msg(my_username)
+send_msg(my_username, client_socket)
 
 while True:
     message = input(f"{my_username} > ")
     if message:
-        send_msg(message)
+        send_msg(message, client_socket)
     
     try:
         while True:
             # receive things
-            username = receive_msg()
+            username = receive_msg(client_socket)
             if username == -1:
                 print('connection closed by the server')
                 sys.exit()
-            message =  receive_msg()
+            message =  receive_msg(client_socket)
             print(f"{username} > {message}")
 
     except IOError as e:
