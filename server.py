@@ -1,7 +1,11 @@
-import socket
-import select
-from generic_functions import receive_message_server, send_msg, message_format
+import socket, select
 
+
+from generic_functions import receive_message, send_msg, message_format
+from constant_val import HEADER_LENGTH, NAME_LENGTH
+
+
+# ------------ server functions ----------------------------------#
 
 def start(IP, PORT):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -16,15 +20,15 @@ def start(IP, PORT):
 def broadcast(user, message, left=set()):
     for client_socket in clients:
         if client_socket not in left:
-            send_msg(user['data'].decode('utf-8'), client_socket)
-            send_msg(message['data'].decode('utf-8'), client_socket)
+            send_msg(user['data'].decode('utf-8'), client_socket, 'txt')
+            send_msg(message['data'].decode('utf-8'), client_socket, 'txt')
             # send_server(user['header']+user['data']+message['header']+message['data'], client_socket)
 
 
 def new_connection():
     client_socket, client_address = server_socket.accept()
-    print('NEW Connection enstablishing')
-    user = receive_message_server(client_socket)
+    # print('NEW Connection enstablishing')
+    user = receive_message(client_socket)
     if user is False:
         print('IN false')
         return
@@ -40,15 +44,51 @@ def new_connection():
 
 def remove_client(notified_socket):
     user = clients[notified_socket]
-    message = message_format(''.encode('utf-8'), f'{user["data"].decode("utf-8")} has left. '.encode('utf-8'))
+    message = message_format(''.encode('utf-8'), f'txt{user["data"].decode("utf-8")} has left. '.encode('utf-8'))
     broadcast(user, message, {notified_socket})
     socket_list.remove(notified_socket)
     del clients[notified_socket]
 
+def find_user(username):
+    for client in clients:
+        if username == clients[client]['data']:
+            return client
+    return False
+
+def message_received(notified_socket):
+    message = receive_message(notified_socket)
+    if message is False:
+        # connection ended.
+        print('Closed connection from {}'.format(clients[notified_socket]['data'].decode('utf-8')))
+        remove_client(notified_socket)
+        return
+
+    user = clients[notified_socket]
+    print('RECEIVED message from {}: {}'.format(user['data'].decode('utf-8'), message['data'].decode('utf-8')))
+    typeof = message['type'].decode('utf-8')
+    if typeof=='txt':    
+        broadcast(user, message, {notified_socket})
+    elif typeof=='cmd':
+        username = message['data'][:NAME_LENGTH].strip()
+        command = message['data'][NAME_LENGTH:]
+        sendto = find_user(username)
+        # print(f'command - {username}, with {command}')
+        if sendto == False:
+            print(f'No such user: {username.decode("utf-8")} found')
+        else:
+            # print('send to ', sendto)
+            send_msg(command.decode('utf-8'), sendto, 'cmd')
+    else:
+        print(f'INVALID INPUT by {user["data"]} message - {message}')
+
+
+
+
+
 # ---------------------- main program ---------------------------#
 
 
-HEADER_LENGTH = 10
+
 IP = "127.0.0.1"
 PORT = 1234
 server_socket = start(IP, PORT)
@@ -68,16 +108,7 @@ while True:
             new_connection()
         else:
             # message received
-            message = receive_message_server(notified_socket)
-            if message is False:
-                # connection ended.
-                print('Closed connection from {}'.format(clients[notified_socket]['data'].decode('utf-8')))
-                remove_client(notified_socket)
-                continue
-            user = clients[notified_socket]
-            print('RECEIVED message from {}: {}'.format(user['data'].decode('utf-8'), message['data'].decode('utf-8')))
-            broadcast(user, message, {notified_socket})
-    
+            message_received(notified_socket)
     # remove non answering clients
     for notified_socket in exception_sockets:
         remove_client(notified_socket)

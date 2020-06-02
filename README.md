@@ -7,7 +7,7 @@ pip uninstall pycrypto
 python initialize.py
 ```
 
-Now you machine is ready!
+**Now you machine is ready!**
 
 ## Run
 ### Open server
@@ -18,3 +18,13 @@ python server.py
 ```
 python client.py
 ```
+
+## Working 
+**Here it will be explained how this system works.**
+### Steps
+- Running `initialize.py` will generate RSA keys 
+- `server.py` will start server and now you can receive new client requests
+- for each client run `client.py` and give command or text for others, it's described in the command line
+  - you can send command to individual user , server will check if any user by such name exits.
+  - text will be broadcasted to all users.
+- write quit() to exit. 
