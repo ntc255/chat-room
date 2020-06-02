@@ -1,4 +1,5 @@
 from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
 
 def generate():
     import os
@@ -17,16 +18,20 @@ def generate():
 
 def encrypt(message):
     # send encoded data
-    with open('keys/rsa_public.pem', 'rb') as f:
+    with open('keys/rsa_public.pem') as f:
         public_key = RSA.importKey(f.read())
-        crypt_message = public_key.encrypt(message,32)
-        return crypt_message[0]
+        cipher = PKCS1_OAEP.new(public_key)
+        crypt_message = cipher.encrypt(message)
+        # print(crypt_message)
+        return crypt_message
 
 def decrypt(crypt_message):
     # return byte data need to be decoded
-    with open('keys/rsa_private.pem', 'rb') as f:
+    with open('keys/rsa_private.pem') as f:
         private_key = RSA.importKey(f.read())
-        message = private_key.decrypt(crypt_message)
+        cipher = PKCS1_OAEP.new(private_key)
+        # cipher = private_key
+        message = cipher.decrypt(crypt_message)
         return message
 
 # generate()
@@ -34,8 +39,8 @@ def main():
     while 1:
         s = input()
         print('MESSAGE - ', s)
-        es = encrypt(s)
+        es = encrypt(s.encode('utf-8'))
         print('ENCRYPTION - ', es)
-        ds = decrypt(es)
+        ds = decrypt(es).decode('utf-8')
         print("DECRYPTION - ", ds)
 # main()

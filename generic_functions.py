@@ -33,7 +33,7 @@ def receive_message_server(client_socket):
         return message_format(message_header, d2)
         # return {"header": message_header, "data": d2}
     except Exception as e:
-        # print('error found', str(e))
+        print('error found', str(e))
         return False
 
 def message_format(header, message):
