@@ -1,18 +1,16 @@
+# standard library
 import socket, select, errno, sys, os
-
-from constant_val import HEADER_LENGTH, NAME_LENGTH
-
 from threading import Thread
 # Thread(target=client_thread, args=(...,..)).start()
 
-from generic_functions import send_msg, receive_message
-
-
-HEADER_LENGTH = 10
-NAME_LENGTH = 20
+# userdefined library
+from generic_functions import send_msg, receive_message, isACK, isNAK
+from constant_val import HEADER_LENGTH, NAME_LENGTH
 
 
 # ----------------- client functions ------------------------#
+# WAIT act a  lock for ack or nak
+WAIT = False
 
 
 """
@@ -24,11 +22,14 @@ username: String
 client_socket: Socket 
 """
 def start(IP, PORT, username):
+    global WAIT
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.settimeout(5)
     client_socket.connect((IP, PORT))
     # received functionality will not be blocking 
     client_socket.setblocking(0)
     send_msg(username, client_socket, 'txt')
+    WAIT = True
     # everything is setup now 
     return client_socket
 
@@ -37,22 +38,30 @@ def start(IP, PORT, username):
 @params
 username: String
 client_socket: Socket
-
+@return
+type: Int
+1 means need to ask for acknowledgement.
+0 means no ack needed. 
 """
 def sending_messages(username, client_socket):
-    message = input(f"{username} > ")
-    if message:
-        if message == 'cmd()':
-            username = input("Enter user to send: ")
-            command = input("\t>> ")
-            msg = f'{username:<{NAME_LENGTH}}' + command
-            print(f'Sending command - {command} to {username}')
-            send_msg(msg, client_socket, 'cmd')
-        elif message == 'quit()':
-            client_socket.close()
-            sys.exit()
-        else:
-            send_msg(message, client_socket, 'txt')
+    global WAIT
+    if not WAIT:
+        message = input(f"{username} > ")
+        if message:
+            if message == 'cmd()':
+                username = input("Enter user to send: ")
+                command = input("\t>> ")
+                msg = f'{username:<{NAME_LENGTH}}' + command
+                print(f'Sending command - {command} to {username}')
+                send_msg(msg, client_socket, 'cmd')
+            elif message == 'quit()':
+                client_socket.close()
+                sys.exit()
+            else:
+                send_msg(message, client_socket, 'txt')
+            WAIT = True
+            return 1
+    return 0
 
 
 """
@@ -71,21 +80,38 @@ def run_command(command):
 """
 @params
 client_socket: Socket
+@return
+type: Int
+1 ack received
+2 nak received
+0 no ack received 
 """
 def receiving_messages(client_socket):
-    username = receive_message(client_socket)
+    global WAIT
+    # no ack=0 means no need to send ack by client to server
+    username = receive_message(client_socket, 0)
     if username == False :
         print('connection closed by the server')
         sys.exit()
-    if username['type'].decode('utf-8')=='txt':
-        message =  receive_message(client_socket)
-        print(f"{username['data'].decode('utf-8')} > {message['data'].decode('utf-8')}")
-        sys.stdout.flush()
-    elif username['type'].decode('utf-8')=='cmd':
-        command = username['data'].decode('utf-8')
-        run_command(command)
+    if WAIT:
+        if username['type'].decode('utf-8') == 'txt':
+            if isACK(username['data']):
+                return 1
+            if isNAK(username['data']):
+                return 2
+        else:
+            raise ValueError('Expecting a ACK')
     else:
-        print('INVALID INPUT')
+        if username['type'].decode('utf-8')=='txt':
+            message =  receive_message(client_socket, 0)
+            print(f"{username['data'].decode('utf-8')} > {message['data'].decode('utf-8')}")
+            sys.stdout.flush()
+        elif username['type'].decode('utf-8')=='cmd':
+            command = username['data'].decode('utf-8')
+            run_command(command)
+        else:
+            print('INVALID INPUT')
+    return 0
 
 
 """
@@ -93,10 +119,26 @@ def receiving_messages(client_socket):
 client_socket: Socket
 """
 def receive_client(client_socket):
+    global WAIT
+    # if ack=1 : expecting an acknowledgement
+    # print('Client ack - ', + WAIT)
     try:
         while True:
             # receive things
-            receiving_messages(client_socket)
+            chk = receiving_messages(client_socket)
+            # print('Client 2 - ', chk)
+            if WAIT:
+                if chk :
+                    if chk==1:
+                        pass
+                        # print('ack received')
+                    else:
+                        print('nak received')
+                        sys.exit()
+                        
+                    WAIT = False
+                else:
+                    raise ValueError('NO acknowlegement received')
     except IOError as e:
         # error we might see depending on OS when their are no more messages to receive
         if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
@@ -109,6 +151,13 @@ def receive_client(client_socket):
         sys.exit()
 
 
+def header(username):
+    print(f'{"*"*70}\n {"welcome "+username:^70} \n{"*"*70}\n')
+    print('Operations-:')
+    print('- write any things as a text')
+    print('- write cmd() than in next two lines user and command\n')
+
+
 # ----------------- main program --------------#
 
 def main():
@@ -118,16 +167,14 @@ def main():
 
     username = input('Username: ')
     client_socket = start(IP, PORT, username)
-    print(f'{"*"*70}\n {"welcome "+username:^70} \n{"*"*70}\n')
-    print('Operations-:')
-    print('- write any things as a text')
-    print('- write cmd() than in next two lines user and command\n')
-
+    
+    header(username)
     while True:
+        receive_client(client_socket)
         # Thread(target=sending_messages, args=(username, client_socket)).start()
         sending_messages(username, client_socket)
         # Thread(target=receive_client, args=(client_socket, )).start()
-        receive_client(client_socket)
+        
 
 
 if __name__ == "__main__":

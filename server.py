@@ -1,6 +1,7 @@
+# standard library
 import socket, select
 
-
+# user defined library
 from generic_functions import receive_message, send_msg, message_format
 from constant_val import HEADER_LENGTH, NAME_LENGTH
 

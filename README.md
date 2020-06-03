@@ -1,6 +1,11 @@
 ## Introduction
 It's a worker-client communication system.
 
+# Clone project
+```
+git clone https://github.com/ntc255/chat-room.git
+```
+
 ## Start
 ```
 pip uninstall pycrypto
@@ -29,8 +34,10 @@ python client.py
   - text will be broadcasted to all users.
 - write quit() to exit. 
 
+### Con: you have to enter to receive others response
+
 ## Future Plans
-- Add acknowledgement
+- Create a gui.
 - username and password system
 - public keys exchange system
 - Prevention from DDOS attack
