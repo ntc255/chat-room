@@ -28,3 +28,9 @@ python client.py
   - you can send command to individual user , server will check if any user by such name exits.
   - text will be broadcasted to all users.
 - write quit() to exit. 
+
+## Future Plans
+- Add acknowledgement
+- username and password system
+- public keys exchange system
+- Prevention from DDOS attack

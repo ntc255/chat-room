@@ -7,6 +7,13 @@ from constant_val import HEADER_LENGTH, NAME_LENGTH
 
 # ------------ server functions ----------------------------------#
 
+"""
+@params
+IP: String
+PORT: String
+@return
+server_socket: Socket 
+"""
 def start(IP, PORT):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # allows to reconnect
@@ -17,6 +24,11 @@ def start(IP, PORT):
     return server_socket
 
 
+"""
+@params
+user: Dict{key: b'String}
+message: Dict{key: b'String}
+"""
 def broadcast(user, message, left=set()):
     for client_socket in clients:
         if client_socket not in left:
@@ -25,6 +37,9 @@ def broadcast(user, message, left=set()):
             # send_server(user['header']+user['data']+message['header']+message['data'], client_socket)
 
 
+"""
+@params
+"""
 def new_connection():
     client_socket, client_address = server_socket.accept()
     # print('NEW Connection enstablishing')
@@ -42,6 +57,10 @@ def new_connection():
     print('ACCEPTED new connection from {}:{} username {}'.format(client_address[0], client_address[1], user['data'].decode('utf-8')))
 
 
+"""
+@params
+notified_socket: Socket
+"""
 def remove_client(notified_socket):
     user = clients[notified_socket]
     message = message_format(''.encode('utf-8'), f'txt{user["data"].decode("utf-8")} has left. '.encode('utf-8'))
@@ -49,12 +68,25 @@ def remove_client(notified_socket):
     socket_list.remove(notified_socket)
     del clients[notified_socket]
 
+
+"""
+@params
+username: String
+@return
+client: Socket
+"""
 def find_user(username):
     for client in clients:
         if username == clients[client]['data']:
             return client
     return False
 
+
+"""
+@params
+notified_socket: Socket
+
+"""
 def message_received(notified_socket):
     message = receive_message(notified_socket)
     if message is False:

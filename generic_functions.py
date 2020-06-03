@@ -10,7 +10,7 @@ s: String
 socket: Socket
 typeof: String
 """
-def send_msg(s, socket, typeof):
+def send_msg(s, socket, typeof='txt'):
     if typeof in ['txt', 'cmd']:
         s1 = typeof + s
         s_body = encrypt(s1.encode('utf-8'))
@@ -21,6 +21,10 @@ def send_msg(s, socket, typeof):
         raise ValueError('Invalid type input')
 
 
+"""
+@params
+client_socket: Socket
+"""
 def receive_message(client_socket):
     message_header = client_socket.recv(HEADER_LENGTH)
     # print('header - ', message_header)
@@ -35,6 +39,11 @@ def receive_message(client_socket):
     # return {"header": message_header, "data": d2}
 
 
+"""
+@params
+header: String
+message: String
+"""
 def message_format(header, message):
     # type - txt, cmd
     return {'header': header, "type":message[:TYPE_LENGTH] ,'data':message[TYPE_LENGTH:]}

@@ -1,6 +1,11 @@
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 
+
+"""
+@note
+It generate keys and save in the folder name keys/
+"""
 def generate():
     import os
     files = [name for name in os.listdir(".") if os.path.isdir(name)]
@@ -16,6 +21,13 @@ def generate():
     f.write(key.exportKey('PEM'))
     f.close()
 
+
+"""
+@params
+message: b'String
+@return
+crypt_message: b'String 
+"""
 def encrypt(message):
     # send encoded data
     with open('keys/rsa_public.pem') as f:
@@ -25,6 +37,13 @@ def encrypt(message):
         # print(crypt_message)
         return crypt_message
 
+
+"""
+@params
+crypt_message: b'String
+@return
+message: b'String 
+"""
 def decrypt(crypt_message):
     # return byte data need to be decoded
     with open('keys/rsa_private.pem') as f:

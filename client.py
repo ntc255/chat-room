@@ -15,6 +15,14 @@ NAME_LENGTH = 20
 # ----------------- client functions ------------------------#
 
 
+"""
+@params
+IP: String
+PORT: String
+username: String
+@return
+client_socket: Socket 
+"""
 def start(IP, PORT, username):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((IP, PORT))
@@ -25,6 +33,12 @@ def start(IP, PORT, username):
     return client_socket
 
 
+"""
+@params
+username: String
+client_socket: Socket
+
+"""
 def sending_messages(username, client_socket):
     message = input(f"{username} > ")
     if message:
@@ -40,10 +54,24 @@ def sending_messages(username, client_socket):
         else:
             send_msg(message, client_socket, 'txt')
 
+
+"""
+@params
+command: String
+"""
 def run_command(command):
-    os.system(command)
+    print(f'You have received a command - {command}')
+    choose = input('y(accept)/any key (decline): ')
+    if choose == 'y':
+        os.system(command)
+    else:
+        pass
     
 
+"""
+@params
+client_socket: Socket
+"""
 def receiving_messages(client_socket):
     username = receive_message(client_socket)
     if username == False :
@@ -60,7 +88,10 @@ def receiving_messages(client_socket):
         print('INVALID INPUT')
 
 
-
+"""
+@params
+client_socket: Socket
+"""
 def receive_client(client_socket):
     try:
         while True:
