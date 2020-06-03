@@ -8,7 +8,7 @@ git clone https://github.com/ntc255/chat-room.git
 
 ## Start
 ```
-pip uninstall pycrypto
+pip install -r requirement.txt
 python initialize.py
 ```
 
@@ -23,6 +23,12 @@ python server.py
 ```
 python client.py
 ```
+
+## Error handeling
+- **Plain Text too long**
+- **Unauthorized user**
+- **No acknowledgement received**
+
 
 ## Working 
 **Here it will be explained how this system works.**

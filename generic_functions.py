@@ -37,16 +37,19 @@ typeof: String
 def send_msg(s, socket, typeof='txt', ack=0):
     if typeof in ['txt', 'cmd']:
         s1 = typeof + s
-        s_body = encrypt(s1.encode('utf-8'))
+        try:
+            s_body = encrypt(s1.encode('utf-8'))
+        except ValueError as e:
+            print("ERROR encountered: ", str(e))
+            print('Sorry unable to send try again')
+            return False
+
         s_header = f'{len(s_body):<{HEADER_LENGTH}}'.encode('utf-8')
         # print('EM - ',encrypted_message)
         socket.send(s_header + s_body)
-        # if ack==0:
-        #     # wait for acknowledgement
-        #     print('waiting for ack')
-        #     Thread(target=waitACK, args=(socket,)).start()
     else:
         raise ValueError('Invalid type input')
+    return True
 
 
 """
@@ -61,16 +64,20 @@ def receive_message(client_socket, ack=1):
         return False
     message_length = int(message_header.decode('utf-8').strip())
     d1 = client_socket.recv(message_length)
-    d2 = decrypt(d1)
+    try:
+        d2 = decrypt(d1)
+        msg = message_format(message_header, d2)
+        if ack:
+            # send an acknowlegement
+            # print('send ack')
+            sendACK(client_socket)
+        return msg
+        # return {"header": message_header, "data": d2}
+    except ValueError as e:
+        print('Unauthorized user tried to access')
+        return False
     # print('received_server- ', d2)
-    msg = message_format(message_header, d2)
-    if ack:
-        # send an acknowlegement
-        # print('send ack')
-        sendACK(client_socket)
-        
-    return msg
-    # return {"header": message_header, "data": d2}
+    
 
 
 """

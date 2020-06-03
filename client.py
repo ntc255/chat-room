@@ -28,7 +28,10 @@ def start(IP, PORT, username):
     client_socket.connect((IP, PORT))
     # received functionality will not be blocking 
     client_socket.setblocking(0)
-    send_msg(username, client_socket, 'txt')
+    ch = send_msg(username, client_socket, 'txt')
+    if ch==False:
+        print('Unable to connect')
+        sys.exit()
     WAIT = True
     # everything is setup now 
     return client_socket
@@ -53,12 +56,15 @@ def sending_messages(username, client_socket):
                 command = input("\t>> ")
                 msg = f'{username:<{NAME_LENGTH}}' + command
                 print(f'Sending command - {command} to {username}')
-                send_msg(msg, client_socket, 'cmd')
+                ch = send_msg(msg, client_socket, 'cmd')
+                if ch== False:return 0 
             elif message == 'quit()':
                 client_socket.close()
                 sys.exit()
             else:
-                send_msg(message, client_socket, 'txt')
+                ch = send_msg(message, client_socket, 'txt')
+                if ch==False:
+                    return 0
             WAIT = True
             return 1
     return 0

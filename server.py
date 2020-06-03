@@ -45,8 +45,8 @@ def new_connection():
     client_socket, client_address = server_socket.accept()
     # print('NEW Connection enstablishing')
     user = receive_message(client_socket)
-    if user is False:
-        print('IN false')
+    if user == False:
+        # print('IN false')
         return
     try:
         user['data'].decode('utf-8')

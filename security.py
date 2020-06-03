@@ -13,7 +13,7 @@ def generate():
         pass
     else:
         os.system('mkdir keys')
-    key = RSA.generate(4096)
+    key = RSA.generate(2048)
     f = open('keys/rsa_public.pem', 'wb')
     f.write(key.publickey().exportKey('PEM'))
     f.close()
